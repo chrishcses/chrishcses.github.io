@@ -391,28 +391,6 @@
       document.getElementById('resetAllBtn').disabled = false;
     }
 	
-	function resetSpec() {
-      if (!confirm("確定要重置此設定嗎？")) return;
-
-      document.querySelector('.cdContainer').forEach(el => {
-        if (el.timerId) {
-          clearInterval(el.timerId);
-          delete el.timerId;
-        }
-      });
-
-      document.getElementById('countdownMode').style.display = 'none';
-      document.getElementById('editMode').style.display = 'block';
-      document.getElementById('editMode').innerHTML = '';
-
-      cardCount = 1;
-      isStarted = false;
-
-      document.getElementById('addBtn').disabled = false;
-      document.getElementById('startAllBtn').disabled = true;
-      document.getElementById('resetAllBtn').disabled = false;
-    }
-	
   </script>
 </body>
 </html>
