@@ -2,7 +2,7 @@
 <html lang="zh-HK">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes"/>
   <title>筲箕灣東官立中學考試計時器</title>
   <style>
     * {
@@ -126,12 +126,12 @@
     }
     .countdown-item {
       background: white;
-      border-radius: 12px;
+      border-radius: 6px;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      padding: 12px;
+      padding: 6px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.12);
       text-align: center;
     }
@@ -166,7 +166,6 @@
     <button id="addBtn" onclick="addSubjectCard()">+ 新增科目</button>
     <button id="startAllBtn" onclick="startAllTimers()" disabled>開始倒數</button>
     <button id="resetAllBtn" onclick="resetAll()">重置</button>
-	<button id="resetSpecific" onclick="resetSpec()">重置指定</button>
   </div>
   <div class="edit-mode" id="editMode"></div>
   <div class="countdown-mode" id="countdownMode"></div>
@@ -366,7 +365,6 @@
       document.getElementById('addBtn').disabled = false;
       document.getElementById('startAllBtn').disabled = false;
       document.getElementById('resetAllBtn').disabled = false;
-	  document.getElementById('resetAllBtn').disabled = false;
     }
 
     function resetAll() {
