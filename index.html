@@ -1,192 +1,378 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-HK">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>筲東校園經濟戰 - iOS版</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Orbitron:wght@700&display=swap');
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>筲箕灣東官立中學考試計時器</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: "Microsoft JhengHei", "PingFang HK", sans-serif;
+      background-color: #f0f5ff;
+      color: #222;
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .header-row {
+      background: #0d47a1;
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 16px;
+      font-weight: bold;
+      font-size: clamp(1.2rem, 4.5vw, 2rem);
+      letter-spacing: 0.5px;
+      z-index: 10;
+    }
+    .school-name {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .date-display {
+      white-space: nowrap;
+      text-align: right;
+    }
 
-        :root { --skw-blue: #00a2ff; --skw-gold: #ffcc00; --danger: #ff0044; --success: #00ff88; }
-        
-        body { 
-            background: #050508; color: white; font-family: -apple-system, "微軟正黑體", sans-serif; 
-            margin: 0; padding: 0; min-height: 100vh; display: flex; justify-content: center; align-items: center;
-            overflow: hidden; touch-action: manipulation;
-        }
+    .control-section {
+      padding: 10px;
+      text-align: center;
+      background: white;
+      border-bottom: 1px solid #eee;
+    }
+    button {
+      font-size: clamp(1rem, 3.5vw, 1.3rem);
+      padding: 6px 14px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin: 0 5px;
+    }
+    #addBtn { background-color: #388e3c; color: white; }
+    #startAllBtn { background-color: #1976d2; color: white; }
+    #resetAllBtn { background-color: #d32f2f; color: white; }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
 
-        #game-container {
-            width: 92vw; max-width: 850px; background: rgba(15, 25, 45, 0.98);
-            border: 2px solid var(--skw-blue); border-radius: 15px;
-            padding: 15px; display: flex; flex-direction: column;
-            position: relative; box-shadow: 0 0 30px rgba(0, 162, 255, 0.2);
-            box-sizing: border-box;
-        }
+    .edit-mode {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .subject-card-edit {
+      background: white;
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 14px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+      position: relative;
+    }
+    .delete-btn {
+      position: absolute;
+      top: 10px;
+      right: 12px;
+      background: #f44336;
+      color: white;
+      border: none;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      font-size: 18px;
+      cursor: pointer;
+    }
+    .row {
+      display: flex;
+      justify-content: space-between;
+      margin: 8px 0;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    .label {
+      font-size: clamp(0.95rem, 3.2vw, 1.2rem);
+      min-width: 50px;
+      text-align: right;
+      padding-right: 6px;
+    }
+    select, input {
+      font-size: clamp(0.9rem, 3vw, 1.1rem);
+      padding: 5px 8px;
+      border: 1px solid #999;
+      border-radius: 5px;
+      text-align: center;
+      min-width: 130px;
+    }
+    input.time-input { width: 55px; min-width: auto; }
 
-        @media (min-width: 768px) {
-            #game-container { display: grid; grid-template-columns: 1fr 280px; gap: 20px; }
-        }
-
-        .boss-box { 
-            background: rgba(20, 30, 50, 0.8); border: 1px solid var(--skw-blue);
-            padding: 15px; border-radius: 12px; text-align: center; margin-bottom: 10px;
-        }
-
-        #boss-emoji { font-size: 50px; display: block; margin: 0 auto 10px; }
-        .boss-defeated { transform: rotate(180deg) scale(0.6); filter: grayscale(1); transition: 0.5s; }
-
-        .tr-meter { height: 12px; background: #222; border-radius: 6px; border: 1px solid #444; overflow: hidden; margin: 8px 0; }
-        #tr-bar { height: 100%; width: 85%; background: linear-gradient(90deg, var(--danger), #ff8800); transition: width 0.5s; }
-
-        .ed-panel { 
-            background: #000; border: 2px solid var(--skw-gold);
-            border-radius: 15px; padding: 15px; text-align: center;
-        }
-        .ed-val { font-family: 'Orbitron', sans-serif; font-size: 2.5em; color: var(--skw-gold); line-height: 1; }
-
-        .opt-btn {
-            background: rgba(255, 255, 255, 0.08); border: 1px solid var(--skw-blue);
-            color: white; padding: 14px; margin: 6px 0; width: 100%;
-            cursor: pointer; font-size: 1em; border-radius: 8px; 
-            -webkit-appearance: none; -webkit-tap-highlight-color: transparent;
-        }
-        .opt-btn:active { background: var(--skw-blue); color: black; }
-
-        .overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.96); z-index: 100; border-radius: 13px;
-            display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;
-            text-align: center;
-        }
-
-        .hit-effect { animation: flash 0.3s; }
-        @keyframes flash { 0% { background: rgba(255,0,0,0.4); } 100% { background: transparent; } }
-    </style>
+    .countdown-mode {
+      flex: 1;
+      display: none;
+      padding: 8px;
+      gap: 12px;
+      background: #f9fbff;
+    }
+    .countdown-item {
+      background: white;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+      text-align: center;
+    }
+    .static-combined,
+    .countdown-large {
+      font-weight: bold;
+      margin: 8px 0;
+      width: 100%;
+      word-break: break-word;
+      font-size: 55pt !important;
+    }
+    .countdown-large {
+      font-family: 'Courier New', monospace;
+      line-height: 1.1;
+    }
+  </style>
 </head>
-<body id="bg">
+<body onclick="requestFullscreenSafely()">
+  <!-- 校名 + 日期 同行 -->
+  <div class="header-row">
+    <div class="school-name">筲箕灣東官立中學 SKWEGSS</div>
+    <div class="date-display" id="dateDisplay"></div>
+  </div>
 
-<div id="game-container">
-    <div id="start-screen" class="overlay">
-        <h1 style="color:var(--skw-gold); font-family:'Black Ops One'; font-size: 2em; margin-bottom:10px;">筲東校園經濟戰</h1>
-        <p style="font-size: 0.9em; margin-bottom: 20px;">點擊下方按鈕解鎖音軌並開始</p>
-        <button id="real-start-btn" style="padding: 20px 40px; font-size: 1.2em; background:var(--skw-blue); color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">進入戰場</button>
-    </div>
+  <div class="control-section">
+    <button id="addBtn" onclick="addSubjectCard()">+ 新增科目</button>
+    <button id="startAllBtn" onclick="startAllTimers()" disabled>開始倒數</button>
+    <button id="resetAllBtn" onclick="resetAll()">重置</button>
+  </div>
+  <div class="edit-mode" id="editMode"></div>
+  <div class="countdown-mode" id="countdownMode"></div>
 
-    <div id="end-screen" class="overlay" style="display:none;">
-        <h1 id="result-title" style="margin:0;">結算</h1>
-        <h2 id="final-score" style="font-size: 3.5em; color:var(--skw-gold); margin: 10px 0;">0</h2>
-        <button onclick="location.reload()" style="padding: 15px 30px; background:white; color:black; border:none; border-radius:8px; font-weight:bold;">重新挑戰</button>
-    </div>
-
-    <div class="main-play">
-        <div style="font-family: 'Orbitron'; color: var(--success); text-align: center; margin-bottom: 5px;">SCORE: <span id="current-score">0</span></div>
-        <div class="boss-box">
-            <span id="boss-emoji">👨‍🏫</span>
-            <div id="boss-speech" style="color: #00ffcc; font-size: 0.9em; min-height: 40px; display: flex; align-items: center; justify-content: center;">「校長正在觀察你的反應...」</div>
-            <div class="tr-meter"><div id="tr-bar"></div></div>
-            <div style="font-size: 0.7em; opacity: 0.6;">總收入 (Total Revenue)</div>
-        </div>
-        <div id="options-grid"></div>
-    </div>
-
-    <div class="stats-panel">
-        <div class="ed-panel">
-            <div style="font-size: 0.7em; color: var(--skw-gold);">彈性 (Ed)</div>
-            <div class="ed-val" id="ed-num">0.25</div>
-            <div id="status-text" style="color:var(--danger); font-size: 0.8em; font-weight:bold;">低彈性 INELASTIC</div>
-        </div>
-    </div>
-</div>
-
-<audio id="bgm" loop preload="auto" src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-15.mp3"></audio>
-<audio id="scream" preload="auto" src="https://actions.google.com/sounds/v1/human_voices/man_scream_short.ogg"></audio>
-<audio id="fail" preload="auto" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
-
-<script>
-    let currentM = 0;
-    let score = 0;
-    const bgm = document.getElementById('bgm');
-    const scream = document.getElementById('scream');
-    const fail = document.getElementById('fail');
-
-    const missions = [
-        { boss: "「校服只有校務處有賣。加價 50%！」", options: ["開放副廠生產 (增加替代品)", "向老師求情", "要求更好布料"], correct: 0, ed: 1.5 },
-        { boss: "「冷衫是校規必需品。再加價 30%！」", options: ["改為自由配搭 (變為非必需品)", "投訴冷衫太厚", "分期付款"], correct: 0, ed: 1.8 },
-        { boss: "「新價格明天立刻生效！」", options: ["爭取兩年緩衝期 (增加調整時間)", "寫信給家長會", "罷買襪子"], correct: 0, ed: 1.4 },
-        { boss: "「襪子只賣 $100，佔支出很小！」", options: ["證明佔基層學生預算極高", "印上校名", "減少功課"], correct: 0, ed: 1.3 },
-        { boss: "「全校服飾全面加價！」", options: ["針對『特定項目』找替代品", "接受加價", "要求校長減薪"], correct: 0, ed: 1.7 }
+  <script>
+    let cardCount = 0;
+    const MAX_CARDS = 8;
+    let isStarted = false;
+    const SUBJECTS = [
+      "中文", "English Lang.", "數學",
+      "數學延伸部分(M2)", "生活與社會", "中國歷史",
+      "地理", "經濟", "企會財",
+      "公民與社會發展", "物理", "化學", "生物", "資訊及通訊科技",
+      "設計與應用科技", "普通話", "旅遊與款待", "體育", "科技與生活(服裝)"
     ];
+    const LEVELS = ["S3", "S4", "S5", "S6"];
+    const COLORS = ["#1976d2", "#388e3c", "#d32f2f", "#7b1fa2", "#f57c00"];
 
-    // 核心修復：使用明確的 Event Listener
-    document.getElementById('real-start-btn').addEventListener('click', function(e) {
-        e.preventDefault();
-        
-        // 必須在點擊瞬間啟動所有音訊，iOS 才會允許後續播放
-        bgm.play().catch(()=>{});
-        scream.play().then(() => { scream.pause(); scream.currentTime = 0; }).catch(()=>{});
-        fail.play().then(() => { fail.pause(); fail.currentTime = 0; }).catch(()=>{});
-        
-        document.getElementById('start-screen').style.display = 'none';
-        loadMission();
-    }, false);
+    function requestFullscreenSafely() {
+      if (!document.fullscreenElement) {
+        const elem = document.documentElement;
+        if (elem.requestFullscreen) elem.requestFullscreen();
+        else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
+        else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
+      }
+      document.body.onclick = null;
+    }
 
-    function loadMission() {
-        const m = missions[currentM];
-        document.getElementById('boss-speech').innerText = m.boss;
-        document.getElementById('ed-num').innerText = "0.25";
-        document.getElementById('tr-bar').style.width = "85%";
-        document.getElementById('boss-emoji').className = "";
-        document.getElementById('status-text').innerText = "低彈性 INELASTIC";
-        document.getElementById('status-text').style.color = "var(--danger)";
-        
-        const grid = document.getElementById('options-grid');
-        grid.innerHTML = '';
-        m.options.forEach((opt, i) => {
-            const btn = document.createElement('button');
-            btn.className = 'opt-btn';
-            btn.innerText = opt;
-            // 針對 iOS 優化的事件
-            btn.onclick = (e) => {
-                e.preventDefault();
-                check(i === m.correct, m.ed);
-            };
-            grid.appendChild(btn);
+    function updateDateTime() {
+      const now = new Date();
+      const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, '0');
+      const d = String(now.getDate()).padStart(2, '0');
+      const w = weekdays[now.getDay()];
+      document.getElementById('dateDisplay').textContent = `${y}年${m}月${d}日 ${w}`;
+    }
+    setInterval(updateDateTime, 1000);
+    updateDateTime();
+
+    function addSubjectCard() {
+      if (cardCount >= MAX_CARDS || isStarted) return;
+      cardCount++;
+      const container = document.getElementById('editMode');
+      const cardId = `card-${Date.now()}`;
+      const card = document.createElement('div');
+      card.className = 'subject-card-edit';
+      card.id = cardId;
+      card.innerHTML = `
+        <button class="delete-btn" onclick="removeCard('${cardId}')">×</button>
+        <div class="row">
+          <span class="label">科目：</span>
+          <select class="subj-select">${SUBJECTS.map(s => `<option>${s}</option>`).join('')}</select>
+        </div>
+        <div class="row">
+          <span class="label">卷別：</span>
+          <select class="paper-select">
+            <option> </option>
+	    <option>(卷一)</option>
+            <option>(卷二)</option>
+            <option>(卷三)</option>
+	    <option>(Paper 1)</option>
+            <option>(Paper 2)</option>
+            <option>(Paper 3)</option>          </select>
+        </div>
+        <div class="row">
+          <span class="label">級別：</span>
+          <select class="level-select">${LEVELS.map(l => `<option>${l}</option>`).join('')}</select>
+        </div>
+        <div class="row">
+          <span class="label">時間：</span>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <input type="number" class="time-input hours" min="0" max="6" value="1"> 時
+            <input type="number" class="time-input minutes" min="0" max="59" value="30"> 分
+          </div>
+        </div>
+      `;
+      container.appendChild(card);
+      document.getElementById('startAllBtn').disabled = false;
+    }
+
+    function removeCard(id) {
+      if (isStarted) return;
+      const card = document.getElementById(id);
+      if (card) {
+        card.remove();
+        cardCount--;
+        document.getElementById('startAllBtn').disabled = (cardCount === 0);
+      }
+    }
+
+    function fitTextToContainer(text, container) {
+      const tempDiv = document.createElement('div');
+      tempDiv.style.position = 'absolute';
+      tempDiv.style.left = '-9999px';
+      tempDiv.style.whiteSpace = 'nowrap';
+      tempDiv.style.fontFamily = 'inherit';
+      tempDiv.style.fontWeight = 'bold';
+      tempDiv.style.textAlign = 'center';
+      tempDiv.style.width = '100%';
+      tempDiv.textContent = text;
+      document.body.appendChild(tempDiv);
+
+      const maxWidth = container.clientWidth * 0.95;
+      const maxHeight = container.clientHeight * 0.9;
+
+      let fontSize = 100;
+      tempDiv.style.fontSize = fontSize + 'px';
+
+      while ((tempDiv.scrollWidth > maxWidth || tempDiv.scrollHeight > maxHeight) && fontSize > 10) {
+        fontSize -= 2;
+        tempDiv.style.fontSize = fontSize + 'px';
+      }
+
+      document.body.removeChild(tempDiv);
+      return fontSize + 'px';
+    }
+
+    function startAllTimers() {
+      if (cardCount === 0) return;
+      isStarted = true;
+
+      const cardsData = [];
+      document.querySelectorAll('.subject-card-edit').forEach(card => {
+        cardsData.push({
+          level: card.querySelector('.level-select').value,
+          subject: card.querySelector('.subj-select').value,
+          paper: card.querySelector('.paper-select').value,
+          hours: parseInt(card.querySelector('.hours').value) || 0,
+          minutes: parseInt(card.querySelector('.minutes').value) || 0
         });
-    }
+      });
 
-    function check(isCorrect, edVal) {
-        document.querySelectorAll('.opt-btn').forEach(b => b.disabled = true);
+      document.getElementById('editMode').style.display = 'none';
+      const cdContainer = document.getElementById('countdownMode');
+      cdContainer.style.display = 'grid';
 
-        if (isCorrect) {
-            score += 20;
-            document.getElementById('current-score').innerText = score;
-            scream.play().catch(()=>{});
-            document.getElementById('bg').classList.add('hit-effect');
-            document.getElementById('boss-emoji').className = "boss-defeated";
-            document.getElementById('ed-num').innerText = edVal;
-            document.getElementById('ed-num').style.color = "var(--success)";
-            document.getElementById('tr-bar').style.width = "20%";
-            document.getElementById('status-text').innerText = "高彈性 ELASTIC";
-            document.getElementById('status-text').style.color = "var(--success)";
+      if (cardsData.length <= 2) {
+        cdContainer.style.gridTemplateColumns = '1fr';
+      } else if (cardsData.length <= 4) {
+        cdContainer.style.gridTemplateColumns = '1fr 1fr';
+      } else {
+        cdContainer.style.gridTemplateColumns = '1fr 1fr';
+        cdContainer.style.gridTemplateRows = 'repeat(4, 1fr)';
+      }
+
+      cdContainer.innerHTML = '';
+      cardsData.forEach((data, index) => {
+        const totalSec = data.hours * 3600 + data.minutes * 60;
+        const color = COLORS[index % COLORS.length];
+        const item = document.createElement('div');
+        item.className = 'countdown-item';
+        const combined = `${data.level}　${data.subject} ${data.paper}`;
+        item.innerHTML = `
+          <div class="static-combined" style="color:${color};">${combined}</div>
+          <div class="countdown-large" id="cd-${index}" style="color:${color};">--:--:--</div>
+        `;
+        cdContainer.appendChild(item);
+
+        if (totalSec > 0) {
+          const cdElem = document.getElementById(`cd-${index}`);
+          let remaining = totalSec;
+          cdElem.timerId = setInterval(() => {
+            if (remaining <= 0) {
+              clearInterval(cdElem.timerId);
+              const message = "考試終結";
+              cdElem.textContent = message;
+              
+              setTimeout(() => {
+                const fontSize = fitTextToContainer(message, cdElem.parentElement);
+                cdElem.style.fontSize = fontSize;
+                cdElem.style.display = 'flex';
+                cdElem.style.justifyContent = 'center';
+                cdElem.style.alignItems = 'center';
+                cdElem.style.height = '100%';
+                cdElem.style.margin = '0';
+                cdElem.style.lineHeight = '1.1';
+              }, 50);
+              return;
+            }
+            const h = Math.floor(remaining / 3600);
+            const m = Math.floor((remaining % 3600) / 60);
+            const s = remaining % 60;
+            cdElem.textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+            remaining--;
+          }, 1000);
         } else {
-            fail.play().catch(()=>{});
-            document.getElementById('tr-bar').style.width = "95%";
-            alert("❌ 答錯了！該因素無法有效提升需求彈性。");
+          document.getElementById(`cd-${index}`).textContent = "無效時間";
         }
+      });
 
-        setTimeout(() => {
-            document.getElementById('bg').classList.remove('hit-effect');
-            currentM++;
-            if(currentM < missions.length) loadMission();
-            else showEndScreen();
-        }, 1200);
+      document.getElementById('addBtn').disabled = true;
+      document.getElementById('startAllBtn').disabled = true;
+      document.getElementById('resetAllBtn').disabled = false;
     }
 
-    function showEndScreen() {
-        document.getElementById('end-screen').style.display = 'flex';
-        document.getElementById('final-score').innerText = score;
-        document.getElementById('result-title').innerText = score >= 60 ? "🏆 守護成功" : "❄️ 守護失敗";
+    function resetAll() {
+      if (!confirm("確定要重置所有設定嗎？")) return;
+
+      document.querySelectorAll('.countdown-large').forEach(el => {
+        if (el.timerId) {
+          clearInterval(el.timerId);
+          delete el.timerId;
+        }
+      });
+
+      document.getElementById('countdownMode').style.display = 'none';
+      document.getElementById('editMode').style.display = 'block';
+      document.getElementById('editMode').innerHTML = '';
+
+      cardCount = 0;
+      isStarted = false;
+
+      document.getElementById('addBtn').disabled = false;
+      document.getElementById('startAllBtn').disabled = true;
+      document.getElementById('resetAllBtn').disabled = false;
     }
-</script>
+  </script>
 </body>
 </html>
